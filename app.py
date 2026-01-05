@@ -34,6 +34,8 @@ EXPERIENCE = [
         ],
         "wins": ["Время отчётности −40%", "Меньше ручного труда за счёт автоматизации"],
         "stack": ["Python", "SQL", "MSSQL", "Superset"],
+        "skills": {"SQL": 1, "Excel": 5, "Power BI": 3}
+
     },
     {
         "id": "job2",
@@ -45,6 +47,8 @@ EXPERIENCE = [
         "tasks": ["Отчётность и автоматизация расчётов (SQL)", "Сбор требований, обучение пользователей"],
         "wins": ["15+ отчётов автоматизировано", "Ошибок меньше через QC/проверки"],
         "stack": ["SQL", "Power BI", "Python"],
+        "skills": {"SQL": 9, "Excel": 5, "Python": 3, "Power BI": 5}
+
     },
     {
         "id": "job1",
@@ -56,6 +60,8 @@ EXPERIENCE = [
         "tasks": ["Отчёты и разборы для бизнеса", "Поиск причин отклонений, поддержка данных"],
         "wins": ["Ускорил подготовку отчётов за счёт шаблонов"],
         "stack": ["Excel", "SQL"],
+        "skills": {"SQL": 9, "Python": 7, "Power BI": 8}
+
     },
 ]
 
@@ -71,41 +77,110 @@ SKILLS = [
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "CV Dashboard"
 
+
 def timeline_fig(selected_id: str):
     xs = [e["x"] for e in EXPERIENCE]
     ys = [0] * len(EXPERIENCE)
+
     sel_idx = next((i for i, e in enumerate(EXPERIENCE) if e["id"] == selected_id), 0)
 
+    # "Now" чуть правее последней точки
+    current_x = max(xs) + 0.9
+
+    # размеры маркеров (активная точка крупнее)
     sizes = [10] * len(EXPERIENCE)
     sizes[sel_idx] = 16
 
-    top_labels = [f"<b>{e['company']}</b><br><span style='font-size:11px'>{e['role']}</span>" for e in EXPERIENCE]
+    # подписи
+    top_labels = [
+        f"<b>{e['company']}</b><br><span style='font-size:11px'>{e['role']}</span>"
+        for e in EXPERIENCE
+    ]
     bottom_labels = [f"<span style='font-size:11px'>{e['start']}</span>" for e in EXPERIENCE]
-    hover_text = [f"<b>{e['company']}</b><br>{e['role']}<br><span style='font-size:12px'>{e['period']}</span>" for e in EXPERIENCE]
+    hover_text = [
+        f"<b>{e['company']}</b><br>{e['role']}<br><span style='font-size:12px'>{e['period']}</span>"
+        for e in EXPERIENCE
+    ]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line=dict(width=3), hoverinfo="skip", showlegend=False))
+
+    # Линия: тянем до Now (без маркера)
     fig.add_trace(
         go.Scatter(
-            x=xs, y=ys, mode="markers",
+            x=xs + [current_x],
+            y=ys + [0],
+            mode="lines",
+            line=dict(width=3),
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+
+    # Кликабельные точки: только компании
+    fig.add_trace(
+        go.Scatter(
+            x=xs,
+            y=ys,
+            mode="markers",
             marker=dict(size=sizes, line=dict(width=2)),
             text=hover_text,
             hovertemplate="%{text}<extra></extra>",
-            showlegend=False
+            showlegend=False,
         )
     )
-    fig.add_trace(go.Scatter(x=xs, y=[0.18]*len(xs), mode="text", text=top_labels, hoverinfo="skip", showlegend=False))
-    fig.add_trace(go.Scatter(x=xs, y=[-0.18]*len(xs), mode="text", text=bottom_labels, hoverinfo="skip", showlegend=False))
 
-    fig.update_xaxes(visible=False)
+    # Подписи сверху: компания + роль
+    fig.add_trace(
+        go.Scatter(
+            x=xs,
+            y=[0.18] * len(xs),
+            mode="text",
+            text=top_labels,
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+
+    # Подписи снизу: дата старта
+    fig.add_trace(
+        go.Scatter(
+            x=xs,
+            y=[-0.18] * len(xs),
+            mode="text",
+            text=bottom_labels,
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+
+    # Метка Now (справа)
+    fig.add_trace(
+        go.Scatter(
+            x=[current_x],
+            y=[-0.18],
+            mode="text",
+            text=["<span style='font-size:11px'><b>Now</b></span>"],
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+
+    # Оси и фон
+    fig.update_xaxes(
+        visible=False,
+        range=[min(xs) - 0.6, current_x + 0.2],
+    )
     fig.update_yaxes(visible=False, range=[-0.25, 0.25])
+
     fig.update_layout(
         height=120,
         margin=dict(l=0, r=0, t=0, b=0),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
     )
+
     return fig
+
 
 def kpi_grid():
     items = []
@@ -113,16 +188,22 @@ def kpi_grid():
         items.append(html.Div([html.Div(k, className="k"), html.Div(v, className="v")], className="item"))
     return html.Div(items, className="kpi")
 
-def skills_block():
+def skills_block(skills_map: dict[str, int]):
+    # сортируем по уровню (desc), затем по названию
+    items = sorted(skills_map.items(), key=lambda kv: (-int(kv[1]), kv[0].lower()))
+
     rows = []
-    for name, level in SKILLS:
+    for name, level in items:
         level = max(0, min(10, int(level)))
         segs = [html.Span(className=("seg on" if i < level else "seg")) for i in range(10)]
         rows.append(
-            html.Div([
-                html.Div(name, className="name"),
-                html.Div(segs, className="battery"),
-            ], className="row")
+            html.Div(
+                [
+                    html.Div(name, className="name"),
+                    html.Div(segs, className="battery"),
+                ],
+                className="row",
+            )
         )
     return html.Div(rows, className="skills")
 
@@ -219,11 +300,11 @@ app.layout = html.Div(
                         ),
 
                         html.Div(
-                            className="cardx cardx-pad",
+                            className="cardx cardx-dark cardx-pad",
                             style={"marginTop": "12px"},
                             children=[
                                 html.Div("Скиллы", className="h-title", style={"fontSize": "20px"}),
-                                skills_block(),
+                                html.Div(id="skills_container"),
                             ],
                         ),
                     ],
@@ -259,17 +340,24 @@ def on_click_timeline(clickData):
     Output("job_tasks", "children"),
     Output("job_wins", "children"),
     Output("job_stack", "children"),
+    Output("skills_container", "children"),
     Input("selected_job", "data"),
 )
 def render_job(job_id):
     job = next((e for e in EXPERIENCE if e["id"] == job_id), EXPERIENCE[0])
+
     fig = timeline_fig(job_id)
     title = f"{job['company']} — {job['role']}"
     period = job["period"]
     tasks = ul(job["tasks"])
     wins = ul(job["wins"])
     stack = "Стек: " + " · ".join(job["stack"])
-    return fig, title, period, tasks, wins, stack
+
+    # если skills нет — подстрахуемся
+    skills_map = job.get("skills", {})
+    skills_ui = skills_block(skills_map) if skills_map else html.Div("—", className="muted")
+
+    return fig, title, period, tasks, wins, stack, skills_ui
 
 if __name__ == "__main__":
     app.run(debug=True)

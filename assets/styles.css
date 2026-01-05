@@ -9,12 +9,15 @@
 }
 
 body{
-  background: radial-gradient(1200px 600px at 85% 12%, rgba(253, 230, 138, 0.35), transparent 60%),
-              radial-gradient(1200px 600px at 15% 20%, rgba(199, 210, 254, 0.35), transparent 60%),
-              var(--bg);
+  background:
+    radial-gradient(1200px 700px at 85% 12%, rgba(253, 230, 138, 0.55), transparent 62%),
+    radial-gradient(900px 600px at 70% 55%, rgba(251, 191, 36, 0.22), transparent 60%),
+    radial-gradient(1200px 700px at 15% 20%, rgba(199, 210, 254, 0.22), transparent 62%),
+    var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
+
 
 .page-wrap{
   max-width: 1200px;
@@ -49,6 +52,27 @@ body{
 }
 
 .cardx-pad{ padding: 14px 14px; }
+
+.cardx-dark{
+  background: rgba(17,24,39,0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.92);
+}
+
+.cardx-dark .section-title,
+.cardx-dark .muted{
+  color: rgba(255,255,255,0.70);
+}
+
+.cardx-dark .skills .seg{
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.cardx-dark .skills .seg.on{
+  background: rgba(253, 230, 138, 0.92); /* жёлтый акцент */
+  border-color: rgba(253, 230, 138, 0.35);
+}
+
 
 .muted{ color: var(--muted); font-size: 12px; }
 .h-title{ font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }

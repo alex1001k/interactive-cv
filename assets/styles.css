@@ -26,6 +26,7 @@ body{
   box-shadow: 0 18px 40px rgba(17,24,39,0.10);
 }
 
+/* --- Card hover + active --- */
 .cardx{
   background: var(--card);
   border: 1px solid var(--border);
@@ -33,6 +34,18 @@ body{
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.cardx:hover{
+  /* без transform */
+  box-shadow: 0 18px 46px rgba(17,24,39,0.12);
+  border-color: rgba(17,24,39,0.14);
+}
+
+.cardx-active{
+  border-color: rgba(17,24,39,0.22);
+  box-shadow: 0 20px 52px rgba(17,24,39,0.16);
 }
 
 .cardx-pad{ padding: 14px 14px; }
@@ -103,4 +116,62 @@ body{
 .skills .seg.on{
   background: rgba(15,23,42,0.86);
   border-color: rgba(15,23,42,0.16);
+}
+
+/* --- Profile hero card (ref style) --- */
+.profile-hero{
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(17,24,39,0.10);
+  background: rgba(255,255,255,0.65);
+  box-shadow: var(--shadow);
+}
+
+.profile-media{
+  width: 100%;
+  aspect-ratio: 1 / 1;            /* квадрат */
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+}
+
+.profile-overlay{
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.profile-name{
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.profile-role{
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+  margin-top: 6px;
+  line-height: 1.25;
+}
+
+.profile-meta{
+  font-size: 12px;
+  opacity: 0.70;
+  margin-top: 6px;
+}
+
+/* optional: make graph area tighter inside card */
+.dash-graph{
+  margin-top: 8px;
 }

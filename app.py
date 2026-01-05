@@ -68,7 +68,6 @@ SKILLS = [
     ("Лидерство", 7),
 ]
 
-# Bootstrap только для сетки/адаптивности; стиль — наш CSS в assets/
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "CV Dashboard"
 
@@ -130,6 +129,17 @@ def skills_block():
 def ul(items):
     return html.Ul([html.Li(x) for x in items])
 
+# ---- Left: Profile hero (ref style) ----
+def profile_hero():
+    bg_url = "url('/assets/avatar.jpg')"
+    return html.Div(
+        className="profile-hero cardx",
+        children=[
+            html.Div(style={"backgroundImage": bg_url}, className="profile-media"),
+        ],
+    )
+
+
 # -------- Layout --------
 app.layout = html.Div(
     className="page-wrap",
@@ -140,40 +150,30 @@ app.layout = html.Div(
                 dbc.Col(
                     width=4,
                     children=[
+                        profile_hero(),
+
                         html.Div(
                             className="cardx cardx-pad",
+                            style={"marginTop": "12px"},
                             children=[
-                                dbc.Row(
-                                    [
-                                        dbc.Col(html.Img(src="/assets/avatar.jpg", className="avatar"), width="auto"),
-                                        dbc.Col(
-                                            [
-                                                html.Div(PROFILE["name"], className="h-title"),
-                                                html.Div(PROFILE["title"], className="h-sub"),
-                                                html.Div(PROFILE["location"], className="muted"),
-                                            ]
-                                        ),
-                                    ],
-                                    align="center",
-                                    className="g-2",
-                                ),
+                                html.Div("Обо мне в цифрах", className="section-title"),
+                                kpi_grid(),
                             ],
                         ),
 
-                        html.Div(className="cardx cardx-pad", children=[
-                            html.Div("Обо мне в цифрах", className="section-title"),
-                            kpi_grid(),
-                        ], style={"marginTop": "12px"}),
-
-                        html.Div(className="cardx cardx-pad", children=[
-                            html.Div("Обо мне", className="section-title"),
-                            html.Div(PROFILE["about"]),
-                            html.Div("Контакты", className="section-title", style={"marginTop": "12px"}),
-                            html.Div(PROFILE["email"], className="muted"),
-                            html.Div(PROFILE["telegram"], className="muted"),
-                            html.Div(PROFILE["linkedin"], className="muted"),
-                            html.Div("QR добавим на следующем шаге", className="muted", style={"marginTop": "12px"}),
-                        ], style={"marginTop": "12px"}),
+                        html.Div(
+                            className="cardx cardx-pad",
+                            style={"marginTop": "12px"},
+                            children=[
+                                html.Div("Обо мне", className="section-title"),
+                                html.Div(PROFILE["about"]),
+                                html.Div("Контакты", className="section-title", style={"marginTop": "12px"}),
+                                html.Div(PROFILE["email"], className="muted"),
+                                html.Div(PROFILE["telegram"], className="muted"),
+                                html.Div(PROFILE["linkedin"], className="muted"),
+                                html.Div("QR добавим на следующем шаге", className="muted", style={"marginTop": "12px"}),
+                            ],
+                        ),
                     ],
                 ),
 
@@ -188,13 +188,15 @@ app.layout = html.Div(
                                 dcc.Graph(
                                     id="timeline",
                                     figure=timeline_fig(EXPERIENCE[0]["id"]),
+                                    className="dash-graph",
                                     config={"displayModeBar": False, "responsive": True},
                                 ),
                             ],
                         ),
 
                         html.Div(
-                            className="cardx cardx-pad",
+                            id="job_card",
+                            className="cardx cardx-pad cardx-active",  # активная карточка (и будет оставаться активной)
                             style={"marginTop": "12px"},
                             children=[
                                 html.Div(id="job_title", className="h-title", style={"fontSize": "20px"}),
@@ -270,4 +272,4 @@ def render_job(job_id):
     return fig, title, period, tasks, wins, stack
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run(debug=True)

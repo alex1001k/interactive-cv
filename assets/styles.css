@@ -316,3 +316,15 @@ body{
   min-height: 240px;   /* больше по вертикали */
   max-height: 520px;   /* ограничение, чтобы всё влезало */
 }
+
+.dash-graph{
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.timeline-hint{
+  font-size: 12px;
+  color: var(--muted);
+  padding-left: 2px;
+  user-select: none;
+}

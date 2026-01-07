@@ -62,6 +62,7 @@ EXPERIENCE = [
         ],
         "stack": ["Python", "SQL", "MSSQL", "Power BI", "Airflow", "Figma"],
         "skills": {"Python": 9, "SQL": 8, "Power BI": 8, "Excel": 7},
+        "x":2022.8
     },
     {
         "id": "job2",
@@ -78,6 +79,8 @@ EXPERIENCE = [
         ],
         "stack": ["Excel", "SQL", "Power BI", "Python"],
         "skills": {"Excel": 10, "SQL": 5, "Python": 3, "Power BI": 3},
+        "x":2019.4
+
     },
     {
         "id": "job1",
@@ -93,6 +96,7 @@ EXPERIENCE = [
         ],
         "stack": ["Excel", "SAP ERP"],
         "skills": {"Excel": 4},
+        "x":2016.12
     },
 ]
 
@@ -158,33 +162,42 @@ def profile_hero():
 # Timeline
 # ----------------------------
 def timeline_fig(selected_id: str):
-    starts = [parse_iso(e["start_date"]) for e in EXPERIENCE]
-    xs = [to_float_year(d) for d in starts]
-    ids = [e["id"] for e in EXPERIENCE]
-    ys = [0] * len(EXPERIENCE)
+    xs = [float(e["x"]) for e in EXPERIENCE]  # original order = clickData mapping stable
+    ys = [0] * len(xs)
 
     sel_idx = next((i for i, e in enumerate(EXPERIENCE) if e["id"] == selected_id), 0)
+
+    # Real "Now" (proportional to current date)
     now_x = to_float_year(date.today())
 
-    axis_color = "rgba(48,48,48,1)"
+    min_x = min(xs) if xs else now_x
+    max_x = max(xs) if xs else now_x
+
+    # keep a tiny padding if now equals last point
+    current_x = max(now_x, max_x + 0.03)
+
+    axis_color = "rgba(17,24,39,0.92)"
     yellow = "#FDE68A"
     yellow_strong = "#FBBF24"
 
     base_size = 10
     active_size = 16
 
-    top_labels = [
-        f"<b>{e['company']}</b><br><span style='font-size:11px'>{e['role']}</span>"
-        for e in EXPERIENCE
-    ]
-    bottom_labels = [f"<span style='font-size:11px'>{e['start']}</span>" for e in EXPERIENCE]
+    # One SINGLE clickable trace for markers (no extra marker traces!)
+    sizes = [base_size] * len(xs)
+    line_widths = [2] * len(xs)
+    opacities = [0.92] * len(xs)
+
+    sizes[sel_idx] = active_size
+    line_widths[sel_idx] = 4
+    opacities[sel_idx] = 0.98
 
     fig = go.Figure()
 
-    # 1) Axis line to Now
+    # 1) Axis line (trace is fine, doesn't affect clicks)
     fig.add_trace(
         go.Scatter(
-            x=[min(xs), now_x],
+            x=[min_x, current_x],
             y=[0, 0],
             mode="lines",
             line=dict(width=3, color=axis_color),
@@ -193,75 +206,100 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 2) Clickable points (single trace that drives clicks)
+    # 2) Duration segments as subtle shapes (NO segment text сверху — чтобы не мешало кликам)
+    exp_sorted = sorted(EXPERIENCE, key=lambda e: float(e["x"]))
+    y0, y1 = -0.06, 0.06
+    for i, e in enumerate(exp_sorted):
+        x0 = float(e["x"])
+        x1 = float(exp_sorted[i + 1]["x"]) if i + 1 < len(exp_sorted) else current_x
+        fig.add_shape(
+            type="rect",
+            x0=x0, x1=x1,
+            y0=y0, y1=y1,
+            fillcolor="rgba(17,24,39,0.04)",
+            line=dict(width=0),
+            layer="below",
+        )
+
+    # 3) Clickable markers (ONLY this trace should be used for click selection)
     fig.add_trace(
         go.Scatter(
             x=xs,
             y=ys,
             mode="markers",
             marker=dict(
-                size=[base_size] * len(xs),
+                size=sizes,
                 color=yellow,
-                line=dict(width=2, color=yellow_strong),
-                opacity=0.90,
+                line=dict(width=line_widths, color=yellow_strong),
+                opacity=opacities,
             ),
-            customdata=ids,     # <- stable click id
-            hoverinfo="skip",   # <- no tooltip
+            hoverinfo="skip",  # убрали hover, чтобы не перекрывал текст
             showlegend=False,
         )
     )
 
-    # 3) Active marker overlay (visual)
-    fig.add_trace(
-        go.Scatter(
-            x=[xs[sel_idx]],
-            y=[0],
-            mode="markers",
-            marker=dict(
-                size=active_size,
-                color=yellow,
-                line=dict(width=4, color=yellow_strong),
-                opacity=1.0,
-            ),
-            hoverinfo="skip",
-            showlegend=False,
-        )
+    # 4) Glow for active point as SHAPES (not clickable)
+    x_active = xs[sel_idx]
+    glow_r_big = 0.10   # подбери при желании
+    glow_r_small = 0.06
+
+    fig.add_shape(
+        type="circle",
+        xref="x", yref="y",
+        x0=x_active - glow_r_big, x1=x_active + glow_r_big,
+        y0=0 - 0.10, y1=0 + 0.10,
+        line=dict(width=2, color="rgba(253,230,138,0.28)"),
+        fillcolor="rgba(253,230,138,0.10)",
+        layer="below",
+    )
+    fig.add_shape(
+        type="circle",
+        xref="x", yref="y",
+        x0=x_active - glow_r_small, x1=x_active + glow_r_small,
+        y0=0 - 0.07, y1=0 + 0.07,
+        line=dict(width=0),
+        fillcolor="rgba(253,230,138,0.10)",
+        layer="below",
     )
 
-    # 4) Glow ring overlay (visual)
-    fig.add_trace(
-        go.Scatter(
-            x=[xs[sel_idx]],
-            y=[0],
-            mode="markers",
-            marker=dict(
-                size=active_size + 18,
-                color="rgba(0,0,0,0)",
-                line=dict(width=2, color="rgba(253,230,138,0.35)"),
-            ),
-            hoverinfo="skip",
-            showlegend=False,
-        )
+    # 5) Selected label — либо между точками, либо справа (если места мало)
+    # считаем следующий x в отсортированном ряду
+    xs_sorted = [float(e["x"]) for e in exp_sorted]
+    # индекс активной в отсортированном
+    sorted_idx = next((i for i, e in enumerate(exp_sorted) if e["id"] == selected_id), 0)
+    next_x = xs_sorted[sorted_idx + 1] if sorted_idx + 1 < len(xs_sorted) else current_x
+
+    selected = EXPERIENCE[sel_idx]
+    label_html = (
+        f"<b>{selected['company']}</b><br>"
+        f"<span style='font-size:11px; opacity:0.9'>{selected['role']}</span>"
     )
 
-    # 5) Top labels (above points)
+    # если сегмент длинный — ставим подпись по центру сегмента (красиво “между точками”)
+    # иначе — справа от точки
+    if (next_x - x_active) >= 0.85:
+        lx = (x_active + next_x) / 2
+        xanchor = "center"
+    else:
+        lx = x_active + 0.16
+        xanchor = "left"
+
+    fig.add_annotation(
+        x=lx,
+        y=0.13,            # отступ от оси (чтобы не липло)
+        text=label_html,
+        showarrow=False,
+        xanchor=xanchor,
+        yanchor="middle",
+        captureevents=False,  # важно: подпись не должна ловить клики
+    )
+
+    # 6) Bottom labels (start)
+    bottom_labels = [f"<span style='font-size:11px'>{e['start']}</span>" for e in EXPERIENCE]
     fig.add_trace(
         go.Scatter(
             x=xs,
-            y=[0.18] * len(xs),
-            mode="text",
-            text=top_labels,
-            hoverinfo="skip",
-            showlegend=False,
-            cliponaxis=False,
-        )
-    )
-
-    # 6) Bottom labels (under points)
-    fig.add_trace(
-        go.Scatter(
-            x=xs,
-            y=[-0.18] * len(xs),
+            y=[-0.22] * len(xs),
             mode="text",
             text=bottom_labels,
             hoverinfo="skip",
@@ -270,11 +308,21 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 7) Now label
+    # 7) Now endpoint — маленькая точка и подпись снизу (без вертикальной линии)
     fig.add_trace(
         go.Scatter(
-            x=[now_x],
-            y=[-0.18],
+            x=[current_x],
+            y=[0],
+            mode="markers",
+            marker=dict(size=8, color="rgba(17,24,39,0.25)", line=dict(width=0)),
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[current_x],
+            y=[-0.22],
             mode="text",
             text=["<span style='font-size:11px'><b>Now</b></span>"],
             hoverinfo="skip",
@@ -283,23 +331,27 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    left_pad = 0.95
-    right_pad = 0.70
-    fig.update_xaxes(visible=False, range=[min(xs) - left_pad, now_x + right_pad])
-    fig.update_yaxes(visible=False, range=[-0.25, 0.25])
+    fig.update_xaxes(
+        visible=False,
+        range=[min_x - 0.55, current_x + 0.35],
+        fixedrange=True,
+    )
+    fig.update_yaxes(
+        visible=False,
+        range=[-0.28, 0.28],
+        fixedrange=True,
+    )
 
     fig.update_layout(
-        height=120,
-        margin=dict(l=16, r=16, t=0, b=0),
+        height=150,
+        margin=dict(l=0, r=0, t=6, b=0),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-        transition=dict(duration=380, easing="cubic-in-out"),
-        uirevision="timeline",
+        transition=dict(duration=320, easing="cubic-in-out"),
+        clickmode="event+select",
     )
 
     return fig
-
-
 
 # ----------------------------
 # Skills (no ghosts + tooltips)
@@ -366,8 +418,13 @@ timeline_card = html.Div(
             animate=True,
             config={"displayModeBar": False, "responsive": True},
         ),
+        html.Div(
+            "Кликни по точке, чтобы обновить обязанности и скиллы.",
+            className="timeline-hint",
+        ),
     ],
 )
+
 
 job_card = html.Div(
     id="job_card",
@@ -482,15 +539,24 @@ app.layout = html.Div(
     prevent_initial_call=True,
 )
 def on_click_timeline(clickData):
-    if not clickData or "points" not in clickData or not clickData["points"]:
-        return DEFAULT_JOB
+    if not clickData or not clickData.get("points"):
+        return EXPERIENCE[0]["id"]
 
-    job_id = clickData["points"][0].get("customdata")
-    if job_id and any(e["id"] == job_id for e in EXPERIENCE):
-        return job_id
+    p = clickData["points"][0]
+    # реагируем только на trace с маркерами:
+    # В нашей фигуре: trace0 = линия, trace1 = markers
+    if p.get("curveNumber") != 1:
+        raise dash.exceptions.PreventUpdate
 
-    return DEFAULT_JOB
+    pn = p.get("pointNumber")
+    if pn is None:
+        raise dash.exceptions.PreventUpdate
 
+    pn = int(pn)
+    if 0 <= pn < len(EXPERIENCE):
+        return EXPERIENCE[pn]["id"]
+
+    raise dash.exceptions.PreventUpdate
 
 
 @app.callback(

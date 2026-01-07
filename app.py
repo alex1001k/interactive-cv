@@ -172,6 +172,8 @@ def timeline_fig(selected_id: str):
         )
 
     ys = [0] * len(EXPERIENCE)
+    y0 = 0.2         # базовая линия шкалы (было 0)
+    y_bottom = -0.10   # нижние подписи (было -0.18)
 
     sel_idx = next((i for i, e in enumerate(EXPERIENCE) if e["id"] == selected_id), 0)
 
@@ -204,7 +206,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=xs + [current_x],
-            y=ys + [0],
+            y=[y0] * len(xs) + [y0],
             mode="lines",
             line=dict(width=3, color=axis_color),
             hoverinfo="skip",
@@ -216,7 +218,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=xs,
-            y=ys,
+            y=[y0] * len(xs),
             mode="markers",
             marker=dict(
                 size=[base_size] * len(xs),
@@ -234,7 +236,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
-            y=[0],
+            y=[y0],
             mode="markers",
             marker=dict(
                 size=active_size,
@@ -250,7 +252,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
-            y=[0],
+            y=[y0],
             mode="markers",
             marker=dict(
                 size=active_size + 18,
@@ -266,7 +268,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=[x + 0.08 for x in xs],   # ← сдвиг вправо от точки
-            y=[0.0] * len(xs),
+            y=[y0] * len(xs),
             mode="text",
             text=right_labels,
             textposition="middle right",
@@ -280,7 +282,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=xs,
-            y=[-0.18] * len(xs),
+            y=[y_bottom] * len(xs),
             mode="text",
             text=bottom_labels,
             hoverinfo="skip",
@@ -293,7 +295,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=[current_x],
-            y=[-0.18],
+            y=[y_bottom],
             mode="text",
             text=["<span style='font-size:11px'><b>Now</b></span>"],
             hoverinfo="skip",
@@ -304,12 +306,15 @@ def timeline_fig(selected_id: str):
 
     fig.update_xaxes(
         visible=False,
-        range=[min(xs) - 0.2, current_x + 0.4],
+        fixedrange=True,
     )
+
     fig.update_yaxes(
         visible=False,
-        range=[-0.25, 0.25],
+        autorange=True,
+        fixedrange=True,   # запрещаем zoom/pan
     )
+
 
     fig.update_layout(
         height=120,

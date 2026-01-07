@@ -4,10 +4,10 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 
+from dash import Dash, html, dcc, Input, Output, State
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State, dcc, html
-from dash.exceptions import PreventUpdate
 
 
 PROFILE = {
@@ -63,7 +63,7 @@ EXPERIENCE = [
         ],
         "stack": ["Python", "SQL", "MSSQL", "Power BI", "Airflow", "Figma"],
         "skills": {"Python": 9, "SQL": 8, "Power BI": 8, "Excel": 7},
-        "x": 2022.8,
+        "x": 2022.8
     },
     {
         "id": "job2",
@@ -80,11 +80,11 @@ EXPERIENCE = [
         ],
         "stack": ["Excel", "SQL", "Power BI", "Python"],
         "skills": {"Excel": 10, "SQL": 5, "Python": 3, "Power BI": 3},
-        "x": 2019.4,
+        "x": 2019.4
     },
     {
         "id": "job1",
-        "start_date": "2016-12-01",
+        "start_date": "2016-12-01",  # исправлено
         "company": "Газпром нефть",
         "role": "Специалист",
         "period": "Дек 2016 — Апр 2019",
@@ -96,7 +96,7 @@ EXPERIENCE = [
         ],
         "stack": ["Excel", "SAP ERP"],
         "skills": {"Excel": 4},
-        "x": 2016.12,
+        "x": 2016.12
     },
 ]
 
@@ -159,14 +159,12 @@ def profile_hero():
 
 
 # ----------------------------
-# Timeline (minimal safe fixes)
-# - Now is proportional to current date
-# - hover hint removed from plot to avoid overlapping labels
-# - clicks work reliably via customdata for ALL clickable layers
+# Timeline  (НЕ ТРОГАЕМ)
 # ----------------------------
 def timeline_fig(selected_id: str):
+    # --- SAFE extraction of x values ---
     try:
-        xs = [float(e["x"]) for e in EXPERIENCE]
+        xs = [e["x"] for e in EXPERIENCE]
     except KeyError:
         raise KeyError(
             "timeline_fig ожидает, что в EXPERIENCE у каждого элемента есть ключ 'x'. "
@@ -177,9 +175,10 @@ def timeline_fig(selected_id: str):
 
     sel_idx = next((i for i, e in enumerate(EXPERIENCE) if e["id"] == selected_id), 0)
 
-    # Proportional "Now"
-    current_x = max(to_float_year(date.today()), max(xs) + 0.02)
+    # Extend to "Now"
+    current_x = max(xs) + 0.9
 
+    # Palette
     axis_color = "rgba(17,24,39,0.92)"
     yellow = "#FDE68A"
     yellow_strong = "#FBBF24"
@@ -187,11 +186,17 @@ def timeline_fig(selected_id: str):
     base_size = 10
     active_size = 16
 
+    # Labels
     right_labels = [
         f"<b>{e['company']}</b><br><span style='font-size:11px'>{e['role']}</span>"
         for e in EXPERIENCE
     ]
-    bottom_labels = [f"<span style='font-size:11px'>{e['start']}</span>" for e in EXPERIENCE]
+    bottom_labels = [
+        f"<span style='font-size:11px'>{e['start']}</span>"
+        for e in EXPERIENCE
+    ]
+
+    hover_text = ["Нажмите для отображения обязанностей"] * len(EXPERIENCE)
 
     fig = go.Figure()
 
@@ -207,7 +212,7 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 2) Clickable markers (stable mapping via customdata = job id)
+    # 2) Clickable markers
     fig.add_trace(
         go.Scatter(
             x=xs,
@@ -219,13 +224,13 @@ def timeline_fig(selected_id: str):
                 line=dict(width=2, color=yellow_strong),
                 opacity=0.9,
             ),
-            customdata=[e["id"] for e in EXPERIENCE],
-            hoverinfo="skip",
+            text=hover_text,
+            hovertemplate="%{text}<extra></extra>",
             showlegend=False,
         )
     )
 
-    # 3) Active marker (also carries job id so click works on it)
+    # 3) Active marker
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
@@ -236,13 +241,12 @@ def timeline_fig(selected_id: str):
                 color=yellow,
                 line=dict(width=4, color=yellow_strong),
             ),
-            customdata=[selected_id],
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
-    # 4) Glow ring (also carries job id so click works on it)
+    # 4) Glow ring
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
@@ -253,16 +257,15 @@ def timeline_fig(selected_id: str):
                 color="rgba(0,0,0,0)",
                 line=dict(width=2, color="rgba(253,230,138,0.35)"),
             ),
-            customdata=[selected_id],
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
-    # 5) Right-side labels (company + role) — keep original style
+    # 5) Right-side labels (company + role)
     fig.add_trace(
         go.Scatter(
-            x=[x + 0.08 for x in xs],
+            x=[x + 0.08 for x in xs],   # ← сдвиг вправо от точки
             y=[0.0] * len(xs),
             mode="text",
             text=right_labels,
@@ -286,7 +289,7 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 7) Now label (no vertical line)
+    # 7) Now label
     fig.add_trace(
         go.Scatter(
             x=[current_x],
@@ -299,8 +302,14 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    fig.update_xaxes(visible=False, range=[min(xs) - 0.6, current_x + 0.4])
-    fig.update_yaxes(visible=False, range=[-0.25, 0.25])
+    fig.update_xaxes(
+        visible=False,
+        range=[min(xs) - 0.6, current_x + 0.4],
+    )
+    fig.update_yaxes(
+        visible=False,
+        range=[-0.25, 0.25],
+    )
 
     fig.update_layout(
         height=120,
@@ -308,10 +317,10 @@ def timeline_fig(selected_id: str):
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         transition=dict(duration=380, easing="cubic-in-out"),
-        clickmode="event+select",
     )
 
     return fig
+
 
 
 # ----------------------------
@@ -379,8 +388,6 @@ timeline_card = html.Div(
             animate=True,
             config={"displayModeBar": False, "responsive": True},
         ),
-        # Small hint under the plot (doesn't overlap labels)
-        html.Div("Кликни по точке, чтобы обновить обязанности и скиллы.", className="timeline-hint"),
     ],
 )
 
@@ -488,7 +495,6 @@ app.layout = html.Div(
     ],
 )
 
-
 # ----------------------------
 # Callbacks
 # ----------------------------
@@ -498,15 +504,20 @@ app.layout = html.Div(
     prevent_initial_call=True,
 )
 def on_click_timeline(clickData):
+    # аккуратно: если клик вне точки — просто ничего не меняем
     if not clickData or not clickData.get("points"):
         raise PreventUpdate
 
-    p = clickData["points"][0]
-    job_id = p.get("customdata")
-    if not job_id:
+    pn = clickData["points"][0].get("pointNumber")
+    if pn is None:
         raise PreventUpdate
 
-    return job_id
+    pn = int(pn)
+    if 0 <= pn < len(EXPERIENCE):
+        return EXPERIENCE[pn]["id"]
+
+    raise PreventUpdate
+
 
 
 @app.callback(
@@ -532,11 +543,7 @@ def render_job(job_id, prev_skills):
     current_skills = job.get("skills", {}) or {}
     prev_skills = prev_skills or {}
 
-    skills_ui = (
-        skills_block(job_id, current_skills, prev_skills)
-        if current_skills
-        else html.Div("—", className="muted")
-    )
+    skills_ui = skills_block(job_id, current_skills, prev_skills) if current_skills else html.Div("—", className="muted")
 
     return fig, title, period, tasks, stack, skills_ui, current_skills
 

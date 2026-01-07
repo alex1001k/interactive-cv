@@ -1,4 +1,10 @@
-from dash import Dash, html, dcc, Input, Output, State, no_update
+from __future__ import annotations
+
+import re
+from datetime import date, datetime
+from pathlib import Path
+
+from dash import Dash, html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 
@@ -20,86 +26,147 @@ PROFILE = {
     ],
 }
 
+EDUCATION = {
+    "short": "МИП • Организационное лидерство и управленческий консалтинг",
+    "details": [
+        "Факультет: Организационное лидерство и управленческий консалтинг",
+        "НИР: «Психологические аспекты управления талантами в организации»",
+        "Добавь курсы/сертификаты по желанию",
+    ],
+}
+
+SKILL_HINTS = {
+    "Python": "ETL/автоматизация, pandas, интеграции, Airflow, проверки качества данных, алгоритмы.",
+    "SQL": "Оптимизация запросов/процедур, витрины, качество данных, MSSQL, проектирование метрик.",
+    "Power BI": "DAX, модели, UX, drill-through, bookmarks, кастомные визуализации/HTML/SVG.",
+    "Excel": "Power Query, модели, шаблоны, сводные, аналитические справки, автоматизация.",
+}
+
+# ВАЖНО: start_date -> пропорциональная шкала
 EXPERIENCE = [
     {
         "id": "job3",
-        "x": 2025,
+        "start_date": "2022-08-01",
         "company": "ПАО ТМК",
         "role": "Руководитель группы отчетности",
-        "period": "2022 — 2025",
+        "period": "Авг 2022 — Now",
         "start": "Авг 2022",
         "tasks": [
             "Построил систему управленческой отчётности закупок с нуля",
             "Наполнил данными из 4 разноструктурных ERP-систем базы MS SQL и SAP BW/4HANA (100M+ строк)",
             "Спроектировал и поддерживал ETL-процессы на Python с оркестрацией в Apache Airflow, сократив время обновления данных до 2 часов",
-            "Создал более 30 отчетов в Power BI для 1 300 пользователей: дизайн сверстал в Figma, продумал пользовательский путь, для лучшего UX в Power BI использовал кастомные визуализации HTML5, SVG-графики, закладки и drill-through детализации",
-            "Создал Python-алгоритмы, использующие статистическую базу, для автоматической проверки планов закупок, которые приносят до 150 млн ₽ сокращения затрат в месяц",
-            "Оптимизировал сложные SQL-запросы и процедуры для БД, повысив их производительность на 70%",
-            "Руководил командой из 3 аналитиков: планирование задач, code review по SQL/Python, развитие компетенций"
+            "Создал более 30 отчетов в Power BI для 1 300 пользователей: дизайн сверстал в Figma, продумал пользовательский путь, для лучшего UX использовал кастомные визуализации HTML5, SVG-графики, закладки и drill-through детализации",
+            "Создал Python-алгоритмы для автоматической проверки планов закупок (до 150 млн ₽ сокращения затрат в месяц)",
+            "Оптимизировал сложные SQL-запросы и процедуры, повысив производительность на 70%",
+            "Руководил командой из 3 аналитиков: планирование задач, code review SQL/Python, развитие компетенций",
         ],
-        "wins": ["Время отчётности −40%", "Меньше ручного труда за счёт автоматизации"],
-        "stack": ["Python", "SQL", "MSSQL", "Superset"],
-        "skills": {"Python":9, "SQL": 8, "Power BI": 8, "Excel": 7}
-
+        "stack": ["Python", "SQL", "MSSQL", "Power BI", "Airflow", "Figma"],
+        "skills": {"Python": 9, "SQL": 8, "Power BI": 8, "Excel": 7},
     },
     {
         "id": "job2",
-        "x": 2022,
+        "start_date": "2019-04-01",
         "company": "АО СУЭК",
-        "role": "Главный специалист -> Начальник отдела",
-        "period": "2019 — 2022",
+        "role": "Главный специалист → Начальник отдела",
+        "period": "Апр 2019 — Авг 2022",
         "start": "Апр 2019",
-        "tasks": ["Формировал консолидированную отчетность базе SAP ERP и Oracle. Переносил excel отчеты на Power Query и Power BI",
-                   "Сократил время обновления отчетности с 5 дней до 1 часа, автоматизировав ручные операции в python;",
-                    "Обеспечивал контроль исполнения ключевых показателей эффективности (KPI) топ-менеджмента закупки, включая оборачиваемость запасов, сроки и объёмы поставок",
-                    "Руководил аналитической группой (3 специалиста): распределение задач, контроль сроков и качества выполнения отчетов"
+        "tasks": [
+            "Формировал консолидированную отчетность на базе SAP ERP и Oracle, переносил Excel-отчеты на Power Query и Power BI",
+            "Сократил время обновления отчетности с 5 дней до 1 часа, автоматизировав ручные операции в Python",
+            "Контролировал KPI топ-менеджмента закупки: оборачиваемость запасов, сроки и объёмы поставок",
+            "Руководил аналитической группой (3 специалиста): распределение задач, контроль сроков и качества",
         ],
-        "wins": ["15+ отчётов автоматизировано", "Ошибок меньше через QC/проверки"],
-        "stack": ["SQL", "Power BI", "Python"],
-        "skills": {"Excel": 10, "SQL": 5, "Python": 3, "Power BI": 3}
-
+        "stack": ["Excel", "SQL", "Power BI", "Python"],
+        "skills": {"Excel": 10, "SQL": 5, "Python": 3, "Power BI": 3},
     },
     {
         "id": "job1",
-        "x": 2018,
-        "company": "ПАО Газпром нефть",
+        "start_date": "2016-12-01",  # исправлено
+        "company": "Газпром нефть",
         "role": "Специалист",
-        "period": "2018 — 2019",
-        "start": "Дек 2018",
-        "tasks": ["Выполнил более 5 тыс. заявок на аккредитацию поставщиков в SRM-системе", 
-                  "ПФормировал аналитические справки в excel на базе выгрузок из SAP ERP (до 20 еженедельно)",
-                  "Проверил более 1,5 тыс. результатов конкурсных процедур на предмет обоснованности выбора поставщиков и предложений"],
-        "wins": ["Ускорил подготовку отчётов за счёт шаблонов"],
-        "stack": ["Excel", "SQL"],
-        "skills": {"Excel": 4}
-
+        "period": "Дек 2016 — Апр 2019",
+        "start": "Дек 2016",
+        "tasks": [
+            "Выполнил более 5 тыс. заявок на аккредитацию поставщиков в SRM-системе",
+            "Формировал аналитические справки в Excel на базе выгрузок из SAP ERP (до 20 еженедельно)",
+            "Проверил более 1,5 тыс. результатов конкурсных процедур на предмет обоснованности выбора поставщиков и предложений",
+        ],
+        "stack": ["Excel", "SAP ERP"],
+        "skills": {"Excel": 4},
     },
-]
-
-SKILLS = [
-    ("SQL", 9),
-    ("Python", 8),
-    ("BI (Superset/Power BI)", 8),
-    ("Data Modeling", 7),
-    ("Коммуникации", 7),
-    ("Лидерство", 7),
 ]
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "CV Dashboard"
 
+DEFAULT_JOB = EXPERIENCE[0]["id"]
 
+
+# ----------------------------
+# Helpers
+# ----------------------------
+def parse_iso(s: str) -> date:
+    return datetime.strptime(s, "%Y-%m-%d").date()
+
+
+def to_float_year(d: date) -> float:
+    start = date(d.year, 1, 1)
+    end = date(d.year + 1, 1, 1)
+    return d.year + (d - start).days / (end - start).days
+
+
+def slug(s: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_-]+", "-", s.strip()).strip("-").lower()
+
+
+def find_qr_asset() -> str | None:
+    for p in ["assets/qr.png", "assets/qr.jpg", "assets/qr.jpeg"]:
+        if Path(p).exists():
+            return "/assets/" + Path(p).name
+    return None
+
+
+def ul(items):
+    return html.Ul([html.Li(x) for x in items])
+
+
+def kpi_grid():
+    items = []
+    for k, v in PROFILE["numbers"]:
+        items.append(html.Div([html.Div(k, className="k"), html.Div(v, className="v")], className="item"))
+    return html.Div(items, className="kpi")
+
+
+def profile_hero():
+    bg_url = "url('/assets/avatar.jpg')"
+    return html.Div(
+        className="profile-hero cardx",
+        children=[
+            html.Div(className="profile-media", style={"backgroundImage": bg_url}),
+            html.Div(
+                className="profile-footer",
+                children=[
+                    html.Div(PROFILE["name"], className="profile-name"),
+                    html.Div(PROFILE["title"], className="profile-role"),
+                ],
+            ),
+        ],
+    )
+
+
+# ----------------------------
+# Timeline
+# ----------------------------
 def timeline_fig(selected_id: str):
-    xs = [e["x"] for e in EXPERIENCE]
+    starts = [parse_iso(e["start_date"]) for e in EXPERIENCE]
+    xs = [to_float_year(d) for d in starts]
+    ids = [e["id"] for e in EXPERIENCE]
     ys = [0] * len(EXPERIENCE)
 
     sel_idx = next((i for i, e in enumerate(EXPERIENCE) if e["id"] == selected_id), 0)
+    now_x = to_float_year(date.today())
 
-    # Extend to "Now"
-    current_x = max(xs) + 0.9
-
-    # Palette (match dark skills vibe + yellow accent)
-    axis_color = "rgba(17,24,39,0.92)"
+    axis_color = "rgba(48,48,48,1)"
     yellow = "#FDE68A"
     yellow_strong = "#FBBF24"
 
@@ -111,18 +178,14 @@ def timeline_fig(selected_id: str):
         for e in EXPERIENCE
     ]
     bottom_labels = [f"<span style='font-size:11px'>{e['start']}</span>" for e in EXPERIENCE]
-    hover_text = [
-        f"<b>{e['company']}</b><br>{e['role']}<br><span style='font-size:12px'>{e['period']}</span>"
-        for e in EXPERIENCE
-    ]
 
     fig = go.Figure()
 
-    # 1) Axis line to "Now"
+    # 1) Axis line to Now
     fig.add_trace(
         go.Scatter(
-            x=xs + [current_x],
-            y=ys + [0],
+            x=[min(xs), now_x],
+            y=[0, 0],
             mode="lines",
             line=dict(width=3, color=axis_color),
             hoverinfo="skip",
@@ -130,7 +193,7 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 2) Base clickable markers (all points)
+    # 2) Clickable points (single trace that drives clicks)
     fig.add_trace(
         go.Scatter(
             x=xs,
@@ -140,15 +203,15 @@ def timeline_fig(selected_id: str):
                 size=[base_size] * len(xs),
                 color=yellow,
                 line=dict(width=2, color=yellow_strong),
-                opacity=0.85,
+                opacity=0.90,
             ),
-            text=hover_text,
-            hovertemplate="%{text}<extra></extra>",
+            customdata=ids,     # <- stable click id
+            hoverinfo="skip",   # <- no tooltip
             showlegend=False,
         )
     )
 
-    # 3) Active marker overlay (NOT clickable, just visuals)
+    # 3) Active marker overlay (visual)
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
@@ -165,7 +228,7 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 4) Glow/Pulse ring overlay (visual)
+    # 4) Glow ring overlay (visual)
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
@@ -181,7 +244,7 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 5) Labels
+    # 5) Top labels (above points)
     fig.add_trace(
         go.Scatter(
             x=xs,
@@ -190,8 +253,11 @@ def timeline_fig(selected_id: str):
             text=top_labels,
             hoverinfo="skip",
             showlegend=False,
+            cliponaxis=False,
         )
     )
+
+    # 6) Bottom labels (under points)
     fig.add_trace(
         go.Scatter(
             x=xs,
@@ -200,238 +266,230 @@ def timeline_fig(selected_id: str):
             text=bottom_labels,
             hoverinfo="skip",
             showlegend=False,
+            cliponaxis=False,
         )
     )
+
+    # 7) Now label
     fig.add_trace(
         go.Scatter(
-            x=[current_x],
+            x=[now_x],
             y=[-0.18],
             mode="text",
             text=["<span style='font-size:11px'><b>Now</b></span>"],
             hoverinfo="skip",
             showlegend=False,
+            cliponaxis=False,
         )
     )
 
-    fig.update_xaxes(visible=False, range=[min(xs) - 0.6, current_x + 0.2])
+    left_pad = 0.95
+    right_pad = 0.70
+    fig.update_xaxes(visible=False, range=[min(xs) - left_pad, now_x + right_pad])
     fig.update_yaxes(visible=False, range=[-0.25, 0.25])
 
     fig.update_layout(
         height=120,
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin=dict(l=16, r=16, t=0, b=0),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-
-        # smooth transitions on update (works with dcc.Graph(animate=True))
         transition=dict(duration=380, easing="cubic-in-out"),
-
-        hoverlabel=dict(
-            bgcolor=yellow,
-            bordercolor=yellow_strong,
-            font=dict(color="rgba(17,24,39,0.92)", size=12),
-        ),
+        uirevision="timeline",
     )
 
     return fig
 
 
 
-
-def kpi_grid():
-    items = []
-    for k, v in PROFILE["numbers"]:
-        items.append(html.Div([html.Div(k, className="k"), html.Div(v, className="v")], className="item"))
-    return html.Div(items, className="kpi")
-
-def skills_block(skills_map: dict[str, int], prev_map: dict[str, int]):
-    # сортируем по уровню (desc), затем по названию
+# ----------------------------
+# Skills (no ghosts + tooltips)
+# ----------------------------
+def skills_block(job_id: str, skills_map: dict[str, int], prev_map: dict[str, int]):
     items = sorted(skills_map.items(), key=lambda kv: (-int(kv[1]), kv[0].lower()))
-
     rows = []
+    tips = []
+
     for idx, (name, level) in enumerate(items):
         level = max(0, min(10, int(level)))
         prev_level = int(prev_map.get(name, 0)) if prev_map else 0
-
         grew = level > prev_level
 
-        # stagger появления строк (заметно)
-        row_style = {"animationDelay": f"{idx * 70}ms"}
+        row_style = {"animationDelay": f"{idx * 90}ms"}
+        row_class = "row grow" if grew else "row"
 
         segs = []
         for i in range(10):
             if i < level:
-                # если навык вырос — сегменты заполняются заметнее (через delay)
                 if grew:
-                    segs.append(html.Span(className="seg on", style={"animationDelay": f"{(idx * 70) + (i * 40)}ms"}))
+                    segs.append(html.Span(className="seg on", style={"animationDelay": f"{(idx*90) + (i*55)}ms"}))
                 else:
                     segs.append(html.Span(className="seg on"))
             else:
                 segs.append(html.Span(className="seg"))
 
-        row_class = "row grow" if grew else "row"
+        sid = slug(name)
+        name_id = f"skill-name-{job_id}-{sid}"
+        bar_id = f"skill-bar-{job_id}-{sid}"
 
         rows.append(
             html.Div(
                 [
-                    html.Div(name, className="name"),
-                    html.Div(segs, className="battery"),
+                    html.Div(name, className="name", id=name_id),
+                    html.Div(segs, className="battery", id=bar_id),
                 ],
                 className=row_class,
                 style=row_style,
             )
         )
 
-    # key: чтобы блок считался новым и анимация срабатывала
-    key = "skills-" + "-".join([f"{k}{v}" for k, v in items])
-    return html.Div(rows, className="skills", key=key)
+        hint = SKILL_HINTS.get(name, "Добавь описание навыка в SKILL_HINTS.")
+        tips.append(dbc.Tooltip(hint, target=name_id, placement="top", trigger="hover"))
+        tips.append(dbc.Tooltip(hint, target=bar_id, placement="top", trigger="hover"))
+
+    wrapper_key = f"skills-wrapper-{job_id}-" + "-".join([f"{slug(k)}{v}" for k, v in items])
+    return html.Div([html.Div(rows, className="skills")] + tips, key=wrapper_key)
 
 
+# ----------------------------
+# Layout
+# ----------------------------
+qr_url = find_qr_asset()
 
-def ul(items):
-    return html.Ul([html.Li(x) for x in items])
+timeline_card = html.Div(
+    className="cardx cardx-pad",
+    children=[
+        html.Div("Карьера", className="h-title", style={"fontSize": "24px"}),
+        dcc.Graph(
+            id="timeline",
+            figure=timeline_fig(DEFAULT_JOB),
+            className="dash-graph",
+            animate=True,
+            config={"displayModeBar": False, "responsive": True},
+        ),
+    ],
+)
 
-# ---- Left: Profile hero (ref style) ----
-def profile_hero():
-    bg_url = "url('/assets/avatar.jpg')"  # твое фото
+job_card = html.Div(
+    id="job_card",
+    className="cardx cardx-pad cardx-active job-card",
+    children=[
+        html.Div(id="job_title", className="h-title", style={"fontSize": "20px"}),
+        html.Div(id="job_period", className="muted"),
+        html.Div("Обязанности", className="section-title"),
+        html.Div(id="job_tasks", className="scrollbox"),
+        html.Div(id="job_stack", className="muted"),
+    ],
+)
 
-    return html.Div(
-        className="profile-hero cardx",
-        children=[
-            # само фото
-            html.Div(
-                className="profile-media",
-                style={"backgroundImage": bg_url},
-            ),
+edu_card = html.Div(
+    className="cardx cardx-pad edu-card",
+    children=[
+        html.Div("Образование", className="h-title", style={"fontSize": "20px"}),
+        dbc.Accordion(
+            [
+                dbc.AccordionItem(
+                    title=EDUCATION["short"],
+                    children=html.Ul([html.Li(x) for x in EDUCATION["details"]]),
+                )
+            ],
+            start_collapsed=True,
+            flush=True,
+            always_open=False,
+        ),
+    ],
+)
 
-            # нижняя плашка с текстом
-            html.Div(
-                className="profile-footer",
-                children=[
-                    html.Div("Крюков Александр", className="profile-name"),
-                    html.Div(
-                        "BI / Python / SQL • Analytics Lead",
-                        className="profile-role",
-                    ),
-                ],
-            ),
-        ],
-    )
+skills_card = html.Div(
+    className="cardx cardx-dark cardx-pad skills-card grow-last",
+    children=[
+        html.Div("Скиллы", className="h-title", style={"fontSize": "20px"}),
+        html.Div(id="skills_container"),
+    ],
+)
 
+about_card = html.Div(
+    className="cardx cardx-pad about-eq",
+    children=[
+        html.Div("Обо мне", className="section-title"),
+        kpi_grid(),
+        html.Div(PROFILE["about"], className="about-text"),
+    ],
+)
 
-# -------- Layout --------
+contacts_card = html.Div(
+    className="cardx cardx-pad contacts-card grow-last",
+    children=[
+        html.Div("Контакты", className="section-title"),
+        html.Div(
+            className="contacts-grid",
+            children=[
+                html.Div(
+                    [
+                        html.Div(PROFILE["email"], className="muted"),
+                        html.Div(PROFILE["telegram"], className="muted"),
+                        html.Div(PROFILE["linkedin"], className="muted"),
+                    ]
+                ),
+                html.Img(src=qr_url, className="qr") if qr_url else html.Div("Добавь assets/qr.png", className="muted"),
+            ],
+        ),
+    ],
+)
+
 app.layout = html.Div(
     className="page-wrap",
     children=[
         dbc.Row(
             [
-                # LEFT
                 dbc.Col(
                     width=4,
-                    children=[
-                        profile_hero(),
-
-                        html.Div(
-                            className="cardx cardx-pad",
-                            style={"marginTop": "12px"},
-                            children=[
-                                html.Div("Обо мне в цифрах", className="section-title"),
-                                kpi_grid(),
-                            ],
-                        ),
-
-                        html.Div(
-                            className="cardx cardx-pad",
-                            style={"marginTop": "12px"},
-                            children=[
-                                html.Div("Обо мне", className="section-title"),
-                                html.Div(PROFILE["about"]),
-                                html.Div("Контакты", className="section-title", style={"marginTop": "12px"}),
-                                html.Div(PROFILE["email"], className="muted"),
-                                html.Div(PROFILE["telegram"], className="muted"),
-                                html.Div(PROFILE["linkedin"], className="muted"),
-                                html.Div("QR добавим на следующем шаге", className="muted", style={"marginTop": "12px"}),
-                            ],
-                        ),
-                    ],
+                    children=html.Div(
+                        className="col-flex",
+                        children=[
+                            profile_hero(),
+                            about_card,
+                            contacts_card,
+                        ],
+                    ),
                 ),
-
-                # RIGHT
                 dbc.Col(
                     width=8,
-                    children=[
-                        html.Div(
-                            className="cardx cardx-pad",
-                            children=[
-                                html.Div("Карьера", className="h-title", style={"fontSize": "24px"}),
-                                dcc.Graph(
-                                    id="timeline",
-                                    figure=timeline_fig(EXPERIENCE[0]["id"]),
-                                    className="dash-graph",
-                                    animate=True, 
-                                    config={"displayModeBar": False, "responsive": True},
-                                ),
-                            ],
-                        ),
-
-                        html.Div(
-                            id="job_card",
-                            className="cardx cardx-pad cardx-active",  # активная карточка (и будет оставаться активной)
-                            style={"marginTop": "12px"},
-                            children=[
-                                html.Div(id="job_title", className="h-title", style={"fontSize": "20px"}),
-                                html.Div(id="job_period", className="muted"),
-                                dbc.Row(
-                                    [
-                                        dbc.Col([
-                                            html.Div("Обязанности", className="section-title"),
-                                            html.Div(id="job_tasks", className="scrollbox"),
-                                        ], width=7),
-                                        dbc.Col([
-                                            html.Div("Достижения", className="section-title"),
-                                            html.Div(id="job_wins", className="scrollbox"),
-                                        ], width=5),
-                                    ],
-                                    className="g-3",
-                                ),
-                                html.Div(id="job_stack", className="muted", style={"marginTop": "10px"}),
-                            ],
-                        ),
-
-                        html.Div(
-                            className="cardx cardx-dark cardx-pad",
-                            style={"marginTop": "12px"},
-                            children=[
-                                html.Div("Скиллы", className="h-title", style={"fontSize": "20px"}),
-                                html.Div(id="skills_container"),
-                            ],
-                        ),
-                    ],
+                    children=html.Div(
+                        className="col-flex right-col",
+                        children=[
+                            timeline_card,
+                            job_card,
+                            edu_card,
+                            skills_card,
+                        ],
+                    ),
                 ),
             ],
-            className="g-3",
+            className="g-0",
+            style={"--bs-gutter-x": "12px", "--bs-gutter-y": "12px"},
         ),
-        dcc.Store(id="selected_job", data=EXPERIENCE[0]["id"]),
+        dcc.Store(id="selected_job", data=DEFAULT_JOB),
         dcc.Store(id="prev_skills", data={}),
-
     ],
 )
 
-# -------- Callbacks --------
+# ----------------------------
+# Callbacks
+# ----------------------------
 @app.callback(
     Output("selected_job", "data"),
     Input("timeline", "clickData"),
     prevent_initial_call=True,
 )
 def on_click_timeline(clickData):
-    if not clickData:
-        return EXPERIENCE[0]["id"]
-    pn = clickData["points"][0].get("pointNumber")
-    if pn is None:
-        return EXPERIENCE[0]["id"]
-    pn = int(pn)
-    if 0 <= pn < len(EXPERIENCE):
-        return EXPERIENCE[pn]["id"]
-    return EXPERIENCE[0]["id"]
+    if not clickData or "points" not in clickData or not clickData["points"]:
+        return DEFAULT_JOB
+
+    job_id = clickData["points"][0].get("customdata")
+    if job_id and any(e["id"] == job_id for e in EXPERIENCE):
+        return job_id
+
+    return DEFAULT_JOB
 
 
 
@@ -440,12 +498,11 @@ def on_click_timeline(clickData):
     Output("job_title", "children"),
     Output("job_period", "children"),
     Output("job_tasks", "children"),
-    Output("job_wins", "children"),
     Output("job_stack", "children"),
     Output("skills_container", "children"),
-    Output("prev_skills", "data"),          # ← добавили
+    Output("prev_skills", "data"),
     Input("selected_job", "data"),
-    State("prev_skills", "data"),           # ← добавили
+    State("prev_skills", "data"),
 )
 def render_job(job_id, prev_skills):
     job = next((e for e in EXPERIENCE if e["id"] == job_id), EXPERIENCE[0])
@@ -454,16 +511,15 @@ def render_job(job_id, prev_skills):
     title = f"{job['company']} — {job['role']}"
     period = job["period"]
     tasks = ul(job["tasks"])
-    wins = ul(job["wins"])
     stack = "Стек: " + " · ".join(job["stack"])
 
     current_skills = job.get("skills", {}) or {}
     prev_skills = prev_skills or {}
 
-    skills_ui = skills_block(current_skills, prev_skills)
+    skills_ui = skills_block(job_id, current_skills, prev_skills) if current_skills else html.Div("—", className="muted")
 
-    # сохраняем текущие как "предыдущие" для следующего переключения
-    return fig, title, period, tasks, wins, stack, skills_ui, current_skills
+    return fig, title, period, tasks, stack, skills_ui, current_skills
+
 
 if __name__ == "__main__":
     app.run(debug=True)

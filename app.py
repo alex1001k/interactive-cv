@@ -4,13 +4,13 @@ import plotly.graph_objects as go
 
 
 PROFILE = {
-    "name": "Александр",
+    "name": "Крюков Александр",
     "title": "BI / Python / SQL Lead",
-    "location": "Lisbon / Remote",
-    "email": "name@example.com",
-    "telegram": "@yourhandle",
-    "linkedin": "linkedin.com/in/yourprofile",
-    "chat_url": "https://t.me/yourhandle",
+    "location": "Москва / Удаленно",
+    "email": "kryukov.av94@gmail.com",
+    "telegram": "@kryukovav",
+    "linkedin": "linkedin.com/in/kryukovav",
+    "chat_url": "https://t.me/kryukovav",
     "about": "Я делаю аналитику как продукт: проясняю смысл, выстраиваю процессы и помогаю людям принимать решения.",
     "numbers": [
         ("Опыт", "8+ лет"),
@@ -24,44 +24,54 @@ EXPERIENCE = [
     {
         "id": "job3",
         "x": 2025,
-        "company": "Компания A",
-        "role": "Team Lead BI / Analytics",
-        "period": "2023 — 2025",
-        "start": "Jan 2023",
+        "company": "ПАО ТМК",
+        "role": "Руководитель группы отчетности",
+        "period": "2022 — 2025",
+        "start": "Авг 2022",
         "tasks": [
-            "Витрины данных и метрики для руководства/продукта",
-            "Процесс разработки: ревью, стандарты, документация",
-            "Приоритизация и синхронизация BI с бизнесом",
+            "Построил систему управленческой отчётности закупок с нуля",
+            "Наполнил данными из 4 разноструктурных ERP-систем базы MS SQL и SAP BW/4HANA (100M+ строк)",
+            "Спроектировал и поддерживал ETL-процессы на Python с оркестрацией в Apache Airflow, сократив время обновления данных до 2 часов",
+            "Создал более 30 отчетов в Power BI для 1 300 пользователей: дизайн сверстал в Figma, продумал пользовательский путь, для лучшего UX в Power BI использовал кастомные визуализации HTML5, SVG-графики, закладки и drill-through детализации",
+            "Создал Python-алгоритмы, использующие статистическую базу, для автоматической проверки планов закупок, которые приносят до 150 млн ₽ сокращения затрат в месяц",
+            "Оптимизировал сложные SQL-запросы и процедуры для БД, повысив их производительность на 70%",
+            "Руководил командой из 3 аналитиков: планирование задач, code review по SQL/Python, развитие компетенций"
         ],
         "wins": ["Время отчётности −40%", "Меньше ручного труда за счёт автоматизации"],
         "stack": ["Python", "SQL", "MSSQL", "Superset"],
-        "skills": {"SQL": 1, "Excel": 5, "Power BI": 3}
+        "skills": {"Python":9, "SQL": 8, "Power BI": 8, "Excel": 7}
 
     },
     {
         "id": "job2",
-        "x": 2023,
-        "company": "Компания B",
-        "role": "Senior Analyst",
-        "period": "2020 — 2023",
-        "start": "Mar 2020",
-        "tasks": ["Отчётность и автоматизация расчётов (SQL)", "Сбор требований, обучение пользователей"],
+        "x": 2022,
+        "company": "АО СУЭК",
+        "role": "Главный специалист -> Начальник отдела",
+        "period": "2019 — 2022",
+        "start": "Апр 2019",
+        "tasks": ["Формировал консолидированную отчетность базе SAP ERP и Oracle. Переносил excel отчеты на Power Query и Power BI",
+                   "Сократил время обновления отчетности с 5 дней до 1 часа, автоматизировав ручные операции в python;",
+                    "Обеспечивал контроль исполнения ключевых показателей эффективности (KPI) топ-менеджмента закупки, включая оборачиваемость запасов, сроки и объёмы поставок",
+                    "Руководил аналитической группой (3 специалиста): распределение задач, контроль сроков и качества выполнения отчетов"
+        ],
         "wins": ["15+ отчётов автоматизировано", "Ошибок меньше через QC/проверки"],
         "stack": ["SQL", "Power BI", "Python"],
-        "skills": {"SQL": 9, "Excel": 5, "Python": 3, "Power BI": 5}
+        "skills": {"Excel": 10, "SQL": 5, "Python": 3, "Power BI": 3}
 
     },
     {
         "id": "job1",
-        "x": 2020,
-        "company": "Компания C",
-        "role": "Analyst",
-        "period": "2017 — 2020",
-        "start": "Jun 2017",
-        "tasks": ["Отчёты и разборы для бизнеса", "Поиск причин отклонений, поддержка данных"],
+        "x": 2018,
+        "company": "ПАО Газпром нефть",
+        "role": "Специалист",
+        "period": "2018 — 2019",
+        "start": "Дек 2018",
+        "tasks": ["Выполнил более 5 тыс. заявок на аккредитацию поставщиков в SRM-системе", 
+                  "ПФормировал аналитические справки в excel на базе выгрузок из SAP ERP (до 20 еженедельно)",
+                  "Проверил более 1,5 тыс. результатов конкурсных процедур на предмет обоснованности выбора поставщиков и предложений"],
         "wins": ["Ускорил подготовку отчётов за счёт шаблонов"],
         "stack": ["Excel", "SQL"],
-        "skills": {"SQL": 9, "Python": 7, "Power BI": 8}
+        "skills": {"Excel": 4}
 
     },
 ]
@@ -282,11 +292,28 @@ def ul(items):
 
 # ---- Left: Profile hero (ref style) ----
 def profile_hero():
-    bg_url = "url('/assets/avatar.jpg')"
+    bg_url = "url('/assets/avatar.jpg')"  # твое фото
+
     return html.Div(
         className="profile-hero cardx",
         children=[
-            html.Div(style={"backgroundImage": bg_url}, className="profile-media"),
+            # само фото
+            html.Div(
+                className="profile-media",
+                style={"backgroundImage": bg_url},
+            ),
+
+            # нижняя плашка с текстом
+            html.Div(
+                className="profile-footer",
+                children=[
+                    html.Div("Крюков Александр", className="profile-name"),
+                    html.Div(
+                        "BI / Python / SQL • Analytics Lead",
+                        className="profile-role",
+                    ),
+                ],
+            ),
         ],
     )
 

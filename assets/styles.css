@@ -323,8 +323,9 @@ body{
 }
 
 .timeline-hint{
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.2;
+  margin-top: 6px;
+  margin-bottom: 0;
   color: var(--muted);
-  padding-left: 2px;
-  user-select: none;
 }

@@ -302,20 +302,28 @@ body{
   min-height: calc(100vh - 80px); /* под page padding/шапку */
 }
 
-/* Job card растягивается */
+/* Job card должен уметь занять 1fr и не раздувать сетку */
 .job-card{
-  flex: 1 1 auto;
+  min-height: 0;        /* критично для grid, иначе “прыжки” */
   display: flex;
   flex-direction: column;
 }
 
-/* Скролл внутри обязанностей — чтобы блок был выше, но не ломал страницу */
+/* Скролл внутри обязанностей — чтобы блок был выше, но не ломал страницу 
 .job-card .scrollbox{
   height: auto;
   flex: 1 1 auto;
-  min-height: 240px;   /* больше по вертикали */
-  max-height: 520px;   /* ограничение, чтобы всё влезало */
+  min-height: 240px;  
+  max-height: 520px;   
 }
+*/
+/* Скролл внутри обязанностей — фиксирует внутреннюю геометрию */
+.job-card .scrollbox{
+  flex: 1 1 auto;
+  min-height: 0;        /* критично, иначе overflow ведёт себя странно */
+  overflow: auto;
+}
+
 
 .dash-graph{
   margin-top: 10px;
@@ -323,9 +331,64 @@ body{
 }
 
 .timeline-hint{
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.2;
-  margin-top: 6px;
+  margin-top: 2px;
   margin-bottom: 0;
   color: var(--muted);
+}
+
+/* Правая колонка как панель на весь экран */
+.right-grid{
+  min-height: calc(100vh - 80px); /* твой общий отступ под page */
+  display: grid;
+  gap: 12px;
+
+  /* ПРОПОРЦИИ ВЫСОТ (настраиваешь тут) */
+  grid-template-rows:
+    var(--timeline-h)
+    1fr
+    var(--edu-h)
+    var(--skills-h);
+}
+
+/* Значения по умолчанию — легко крутить */
+:root{
+  --timeline-h: 120px;
+  --edu-h: 120px;
+  --skills-h: 200px;
+}
+
+
+@media (max-width: 991px){
+  .right-grid{
+    display: flex;
+    flex-direction: column;
+  }
+
+}
+.edu-card{
+  position: relative;
+  z-index: 10;
+}
+
+.skills-card{
+  position: relative;
+  z-index: 1;
+}
+.timeline-wrap{
+  margin-top: 0px;   /* было ~8–12px, делаем компактно */
+}
+
+.timeline-wrap .dash-graph{
+  margin-top: 0;     /* перебиваем общий стиль */
+}
+/* уменьшаем верхний padding только у карточки карьеры */
+.timeline-card{
+  padding-top: 10px !important;  /* было 14px */
+}
+
+/* и уменьшаем расстояние между заголовком и графиком */
+.timeline-card #timeline{
+  margin-top: 2px !important;
 }

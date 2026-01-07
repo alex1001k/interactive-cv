@@ -269,7 +269,7 @@ def timeline_fig(selected_id: str):
             y=[0.0] * len(xs),
             mode="text",
             text=right_labels,
-            textposition="middle left",
+            textposition="middle right",
             hoverinfo="skip",
             showlegend=False,
             cliponaxis=False,
@@ -304,7 +304,7 @@ def timeline_fig(selected_id: str):
 
     fig.update_xaxes(
         visible=False,
-        range=[min(xs) - 0.6, current_x + 0.4],
+        range=[min(xs) - 0.2, current_x + 0.4],
     )
     fig.update_yaxes(
         visible=False,
@@ -313,7 +313,7 @@ def timeline_fig(selected_id: str):
 
     fig.update_layout(
         height=120,
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin=dict(l=0, r=10, t=0, b=0),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         transition=dict(duration=380, easing="cubic-in-out"),
@@ -378,7 +378,7 @@ def skills_block(job_id: str, skills_map: dict[str, int], prev_map: dict[str, in
 qr_url = find_qr_asset()
 
 timeline_card = html.Div(
-    className="cardx cardx-pad",
+    className="cardx cardx-pad timeline-card",
     children=[
         html.Div("Карьера", className="h-title", style={"fontSize": "24px"}),
         dcc.Graph(
@@ -387,6 +387,7 @@ timeline_card = html.Div(
             className="dash-graph",
             animate=True,
             config={"displayModeBar": False, "responsive": True},
+            style={"height": "120px"},
         ),
     ],
 )
@@ -475,9 +476,9 @@ app.layout = html.Div(
                     ),
                 ),
                 dbc.Col(
-                    width=8,
+                    width=12, lg=8,
                     children=html.Div(
-                        className="col-flex right-col",
+                        className="right-grid",
                         children=[
                             timeline_card,
                             job_card,

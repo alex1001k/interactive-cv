@@ -354,8 +354,8 @@ body{
 
 /* Значения по умолчанию — легко крутить */
 :root{
-  --timeline-h: 120px;
-  --edu-h: 120px;
+  --timeline-h: 160px;
+  --edu-h: 90px;
   --skills-h: 200px;
 }
 

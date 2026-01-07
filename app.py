@@ -4,6 +4,7 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 
+
 from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
@@ -15,7 +16,7 @@ PROFILE = {
     "title": "BI / Python / SQL Lead",
     "location": "Москва / Удаленно",
     "email": "kryukov.av94@gmail.com",
-    "telegram": "@kryukovav",
+    "telegram": "https://t.me/kryukovav",
     "linkedin": "linkedin.com/in/kryukovav",
     "chat_url": "https://t.me/kryukovav",
     "about": "Я делаю аналитику как продукт: проясняю смысл, выстраиваю процессы и помогаю людям принимать решения.",
@@ -28,11 +29,12 @@ PROFILE = {
 }
 
 EDUCATION = {
-    "short": "МИП • Организационное лидерство и управленческий консалтинг",
+    "short": "2018 • Магистр Нефтегазового дела (Транспорт и хранение нефти и газа)",
     "details": [
-        "Факультет: Организационное лидерство и управленческий консалтинг",
-        "НИР: «Психологические аспекты управления талантами в организации»",
-        "Добавь курсы/сертификаты по желанию",
+        "СпбГГУ, факультет Нефтегазовое дело",
+        "Кафедра: «Транспорт и хранение нефти и газа»",
+        "2012-2016 - Бакалавриат (Эксплуатация объектов транспорта и хранение нефти, газа и продуктов переработки)",
+        "2016-2018 - Магистратура (Диагностика газотранспортных систем)",
     ],
 }
 
@@ -49,8 +51,8 @@ EXPERIENCE = [
         "id": "job3",
         "start_date": "2022-08-01",
         "company": "ПАО ТМК",
-        "role": "Руководитель группы отчетности",
-        "period": "Авг 2022 — Now",
+        "role": "Руководитель группы",
+        "period": "Авг 2022 — по н.в.",
         "start": "Авг 2022",
         "tasks": [
             "Построил систему управленческой отчётности закупок с нуля",
@@ -69,7 +71,7 @@ EXPERIENCE = [
         "id": "job2",
         "start_date": "2019-04-01",
         "company": "АО СУЭК",
-        "role": "Главный специалист → Начальник отдела",
+        "role": "Главный специалист<br>→ Начальник отдела",
         "period": "Апр 2019 — Авг 2022",
         "start": "Апр 2019",
         "tasks": [
@@ -85,7 +87,7 @@ EXPERIENCE = [
     {
         "id": "job1",
         "start_date": "2016-12-01",  # исправлено
-        "company": "Газпром нефть",
+        "company": "ПАО Газпром нефть",
         "role": "Специалист",
         "period": "Дек 2016 — Апр 2019",
         "start": "Дек 2016",
@@ -140,6 +142,11 @@ def kpi_grid():
         items.append(html.Div([html.Div(k, className="k"), html.Div(v, className="v")], className="item"))
     return html.Div(items, className="kpi")
 
+RU_MON = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+
+def now_label_ru(d: date) -> str:
+    return f"{RU_MON[d.month - 1]} {d.year}"
+
 
 def profile_hero():
     bg_url = "url('/assets/avatar.jpg')"
@@ -171,14 +178,16 @@ def timeline_fig(selected_id: str):
             "Добавь 'x' (число, например 2019.5) в каждый job."
         )
 
-    ys = [0] * len(EXPERIENCE)
-    y0 = 0.2         # базовая линия шкалы (было 0)
-    y_bottom = -0.10   # нижние подписи (было -0.18)
-
     sel_idx = next((i for i, e in enumerate(EXPERIENCE) if e["id"] == selected_id), 0)
+    today = date.today()
+    # --- Y positions ---
+    y_line = 0.0
+    y_top = 0.05       # подписи компаний / ролей
+    y_bottom = -0.03  # даты
 
-    # Extend to "Now"
-    current_x = max(xs) + 0.9
+    # --- PROPORTIONAL NOW ---
+    now_x = to_float_year(date.today())
+    current_x = max(now_x, max(xs))
 
     # Palette
     axis_color = "rgba(17,24,39,0.92)"
@@ -188,11 +197,13 @@ def timeline_fig(selected_id: str):
     base_size = 10
     active_size = 16
 
-    # Labels
-    right_labels = [
-        f"<b>{e['company']}</b><br><span style='font-size:11px'>{e['role']}</span>"
+    # --- Labels ---
+    top_labels = [
+        f"<span style='font-size:11px; font-weight:800'>{e['company']}</span><br>"
+        f"<span style='font-size:10px; opacity:0.75'>{e['role']}</span>"
         for e in EXPERIENCE
     ]
+
     bottom_labels = [
         f"<span style='font-size:11px'>{e['start']}</span>"
         for e in EXPERIENCE
@@ -206,7 +217,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=xs + [current_x],
-            y=[y0] * len(xs) + [y0],
+            y=[y_line] * (len(xs) + 1),
             mode="lines",
             line=dict(width=3, color=axis_color),
             hoverinfo="skip",
@@ -218,7 +229,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=xs,
-            y=[y0] * len(xs),
+            y=[y_line] * len(xs),
             mode="markers",
             marker=dict(
                 size=[base_size] * len(xs),
@@ -236,7 +247,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
-            y=[y0],
+            y=[y_line],
             mode="markers",
             marker=dict(
                 size=active_size,
@@ -252,7 +263,7 @@ def timeline_fig(selected_id: str):
     fig.add_trace(
         go.Scatter(
             x=[xs[sel_idx]],
-            y=[y0],
+            y=[y_line],
             mode="markers",
             marker=dict(
                 size=active_size + 18,
@@ -264,27 +275,28 @@ def timeline_fig(selected_id: str):
         )
     )
 
-    # 5) Right-side labels (company + role)
+    # 5) TOP labels — над точками, выравнивание по левому краю
     fig.add_trace(
         go.Scatter(
-            x=[x + 0.08 for x in xs],   # ← сдвиг вправо от точки
-            y=[y0] * len(xs),
+            x=[x - 0.05 for x in xs],  # небольшой сдвиг влево
+            y=[y_top] * len(xs),
             mode="text",
-            text=right_labels,
-            textposition="middle right",
+            text=top_labels,
+            textposition="bottom right",
             hoverinfo="skip",
             showlegend=False,
             cliponaxis=False,
         )
     )
 
-    # 6) Bottom labels (start date)
+    # 6) Bottom labels — даты под точками
     fig.add_trace(
         go.Scatter(
             x=xs,
             y=[y_bottom] * len(xs),
             mode="text",
             text=bottom_labels,
+            textposition="top center",
             hoverinfo="skip",
             showlegend=False,
             cliponaxis=False,
@@ -297,7 +309,8 @@ def timeline_fig(selected_id: str):
             x=[current_x],
             y=[y_bottom],
             mode="text",
-            text=["<span style='font-size:11px'><b>Now</b></span>"],
+            text=[f"<span style='font-size:11px'><b>{now_label_ru(today)}</b></span>"],
+            textposition="top center",
             hoverinfo="skip",
             showlegend=False,
             cliponaxis=False,
@@ -306,19 +319,19 @@ def timeline_fig(selected_id: str):
 
     fig.update_xaxes(
         visible=False,
+        range=[min(xs) - 0.6, current_x + 0.6],
         fixedrange=True,
     )
 
     fig.update_yaxes(
         visible=False,
         autorange=True,
-        fixedrange=True,   # запрещаем zoom/pan
+        fixedrange=True,
     )
 
-
     fig.update_layout(
-        height=120,
-        margin=dict(l=0, r=10, t=0, b=0),
+        height=140,                     # ↑ чуть выше, чтобы всё влезало
+        margin=dict(l=0, r=10, t=4, b=18),  # b важно для дат
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         transition=dict(duration=380, easing="cubic-in-out"),

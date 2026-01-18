@@ -566,6 +566,7 @@ def render_job(job_id, prev_skills):
 
     return fig, title, period, tasks, stack, skills_ui, current_skills
 
+server = app.server
 
 if __name__ == "__main__":
     app.run(debug=True)

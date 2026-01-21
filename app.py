@@ -102,8 +102,12 @@ EXPERIENCE = [
     },
 ]
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = "CV Dashboard"
+app = Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    meta_tags=[{"name": "viewport", "content": "width=1024"}],
+)
+app.title = "CV Kryukov"
 
 DEFAULT_JOB = EXPERIENCE[0]["id"]
 
